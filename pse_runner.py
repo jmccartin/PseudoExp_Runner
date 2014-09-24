@@ -50,7 +50,8 @@ def run_over_files(file_iter):
 			clusterconfig.write("SIGNAL_FILE: "+rfile.split("/")[-1]+" "+line.split(" ")[-2]+" "+line.split(" ")[-1]+"\n")
 		elif 'BACKGROUND_FILE' in line:
 			rfile = (line.split(" ")[1])
-			clusterconfig.write("BACKGROUND_FILE: "+rfile.split("/")[-1]+" "+line.split(" ")[-2]+" "+line.split(" ")[-1]+"\n")
+			if 'BACKGROUND' in [value for value in line.split('#')][0]:
+				clusterconfig.write("BACKGROUND_FILE: "+rfile.split("/")[-1]+" "+line.split(" ")[-2]+" "+line.split(" ")[-1]+"\n")
 		else:
 			clusterconfig.write(line)
 		
@@ -100,8 +101,8 @@ def create_submission_script(output_dir, file_iter):
 	print >>sub, "cp "+output_dir+"/*.root ."
             
 	print >>sub, "ls -alh ."
-	print >>sub, "./runPseudoExperiments samplesFile_"+str(file_iter)+".txt "+str(int(npseudoexps)/nfiles_to_submit)
-	print >>sub, "cp Mass*.root "+output_dir+"/MassJES_Bkg_M_"+mass_point+".5_JES_1_NOMINAL_"+str(file_iter)+".root"
+	print >>sub, "time ./runPseudoExperiments samplesFile_"+str(file_iter)+".txt "+str(int(npseudoexps)/nfiles_to_submit)
+	print >>sub, "cp MassJES_Bkg_M_"+mass_point+".5_JES_1_NOMINAL.root "+output_dir+"/MassJES_Bkg_M_"+mass_point+".5_JES_1_NOMINAL_"+str(file_iter)+".root"
 	print >>sub, "rm -rf "+local_node_directory+"/`whoami`/$PBS_JOBID"
 
 	sub.close()
@@ -122,7 +123,7 @@ for line in open(configname,'rb+'):
 		rootinput_sig = line.split(" ")[1]
 	if 'BACKGROUND_FILE' in line:
 		rootinput_bkgd.append(line.split(" ")[1])
-		
+
 os.system("mkdir "+out_area+"/data")
 os.system("cp "+cmssw_dir+"/data/muon_calibration.root "+out_area+"/data")
 os.system("cp "+cmssw_dir+"/data/crossSection.root "+out_area+"/data")

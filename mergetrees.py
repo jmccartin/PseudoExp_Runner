@@ -23,21 +23,26 @@ rlist_1 = ROOT.TList()
 
 rfiles = []
 
-bad_files = 0
+bad_files = {}
 
-# Check for valid input root files
-if len(rfile_list) < 2:
-	print 'No valid input files found!'
-	sys.exit()
+# Resubmit jobs to the cluster with qsub
+def resubmit_job(job):
+	out_area = job.split('/submission_')[0]
+	command = "qsub -l walltime="+walltime+" -o "+out_area+" -e "+out_area+" -q localgrid@cream02 "+job
+	print command
+	os.system(command)
+	os.system('rm '+job+'.e*')
+	os.system('rm '+job+'.o*')
+
 
 # Check output files for seg faults and walltime issues
 for file in err_list:
 	for line in open(file, 'rb+'):
 		if ('segmentation' in line) or ('walltime' in line):
 			print 'Warning!  Errors found in job: '+str(file)
-			bad_files += 1
+			bad_files[file.split('.e')[0]] = 1
 
-if bad_files != 0:
+if len(bad_files) != 0:
 	harvest = raw_input('Do you wish to continue? [y/N]\n')
 	if harvest == 'y':
 		harvest = True
@@ -46,8 +51,19 @@ if bad_files != 0:
 else:
 	harvest = True
 
+if not harvest:
+	resubmit = raw_input('Do you wish to resubmit bad jobs? [y/N]\n')
+	if resubmit == 'y':
+		walltime = raw_input('Please enter new walltime for jobs to submit: ')
+		for job in bad_files.keys():
+			resubmit_job(job)
+
 if harvest:
-	
+	# Check for valid input root files
+	if len(rfile_list) < 2:
+		print 'No valid input files found!'
+		sys.exit()
+
 	files_dict = {}
 
 	print 'Will merge from '+str(len(rfile_list))+' files.'
@@ -64,9 +80,11 @@ if harvest:
 		rlist_1.Add(psexpTree)
 
 	# Check for missing root files
+	missing_jobs = []
 	for i in range(1,len(rfile_list)):
 		if i not in files_dict:
 			print 'Missing root file from job '+str(i)+'!'
+			missing_jobs.append(i)
 
 	mergedInfoTree = psexpInfoTree.CloneTree(0)
 
@@ -92,20 +110,26 @@ if harvest:
 
 	print 'Merged '+str(len(rfile_list)*psexpInfoTree.numPsexp)+' pseudoexperiments to '+str(outfile)+'\n'
 
-	cleanup = raw_input('Clean up output files? [y/N]\n')
-	if cleanup == 'y':
-		cleanup = True
+	# If there are missing root files, resubmit them
+	if len(missing_jobs) != 0:
+		resubmit_missing_jobs = raw_input('Resubmit missing jobs? [y/N]\n')
+		if resubmit_missing_jobs == 'y':
+			walltime = raw_input('Please enter new walltime for jobs to submit: ')
+			for file in script_list:
+				job_id = int(file.split('.sh')[0].split('_')[-1])
+				if job_id in missing_jobs:
+					resubmit_job(file)
 	else:
-		cleanup = False
-	
-	if cleanup:
-		for file in rfile_list:
-			os.system('rm '+file)
-		for file in out_list:
-			os.system('rm '+file)
-		for file in err_list:
-			os.system('rm '+file)
-		for file in script_list:
-			os.system('rm '+file)
-		for file in config_list:
-			os.system('rm '+file)
+		# Clean up all split root files, job logs and config files
+		cleanup = raw_input('Clean up output files? [y/N]\n')
+		if cleanup == 'y':
+			for file in rfile_list:
+				os.system('rm '+file)
+			for file in out_list:
+				os.system('rm '+file)
+			for file in err_list:
+				os.system('rm '+file)
+			for file in script_list:
+				os.system('rm '+file)
+			for file in config_list:
+				os.system('rm '+file)

@@ -27,11 +27,15 @@ if options.execute:
 	walltime = config.get('job', 'walltime')
 	npseudoexps = config.get('job', 'n_pseudoexps')
 	splitting = config.get('job', 'splitting')
+	systematic = config.get('systematics', 'systematic_variation')
 	nfiles_to_submit = int(npseudoexps)/int(splitting)
 
 else:
-	print 'Please run in config mode'
+	print 'Please run in config mode [pserunner -x <config>]'
 	sys.exit()
+
+if not systematic:
+	systematic = 'NOMINAL'
 
 def run_over_files(file_iter):
 
@@ -45,13 +49,12 @@ def run_over_files(file_iter):
 	for line in open(configname,'rb+'):
 		if 'RANDOM_SEED' in line:
 			clusterconfig.write("RANDOM_SEED: "+str(random_seed)+"\n")
-		elif 'SIGNAL_FILE' in line:
+		elif 'SIGNAL_FILE' in line and '#' not in line[0]:
 			rfile = line.split(" ")[1]
-			clusterconfig.write("SIGNAL_FILE: "+rfile.split("/")[-1]+" "+line.split(" ")[-2]+" "+line.split(" ")[-1]+"\n")
-		elif 'BACKGROUND_FILE' in line:
+			clusterconfig.write("SIGNAL_FILE: "+rfile.split("/")[-1]+" "+line.split(" ")[-2]+" "+systematic+"\n")
+		elif 'BACKGROUND_FILE' in line and '#' not in line[0]:
 			rfile = (line.split(" ")[1])
-			if 'BACKGROUND' in [value for value in line.split('#')][0]:
-				clusterconfig.write("BACKGROUND_FILE: "+rfile.split("/")[-1]+" "+line.split(" ")[-2]+" "+line.split(" ")[-1]+"\n")
+			clusterconfig.write("BACKGROUND_FILE: "+rfile.split("/")[-1]+" "+line.split(" ")[-2]+" "+systematic+"\n")
 		else:
 			clusterconfig.write(line)
 		
@@ -98,11 +101,11 @@ def create_submission_script(output_dir, file_iter):
 	print >>sub, "cp -r "+output_dir+"/data ."
 	print >>sub, "cp "+output_dir+"/runPseudoExperiments ."
 	print >>sub, "cp "+output_dir+"/samplesFile_"+str(file_iter)+".txt ."
-	print >>sub, "cp "+output_dir+"/*.root ."
+	print >>sub, "cp "+output_dir+"/LHCOTree*.root ."
             
-	print >>sub, "ls -alh ."
 	print >>sub, "time ./runPseudoExperiments samplesFile_"+str(file_iter)+".txt "+str(int(npseudoexps)/nfiles_to_submit)
-	print >>sub, "cp MassJES_Bkg_M_"+mass_point+".5_JES_1_NOMINAL.root "+output_dir+"/MassJES_Bkg_M_"+mass_point+".5_JES_1_NOMINAL_"+str(file_iter)+".root"
+	print >>sub, "ls -alh ."
+	print >>sub, "cp MassJES_Bkg_M_"+mass_point+".5_JES_1_"+systematic+".root "+output_dir+"/MassJES_Bkg_M_"+mass_point+".5_JES_1_"+systematic+"_"+str(file_iter)+".root"
 	print >>sub, "rm -rf "+local_node_directory+"/`whoami`/$PBS_JOBID"
 
 	sub.close()
@@ -110,7 +113,7 @@ def create_submission_script(output_dir, file_iter):
 	return outfile
 
 
-out_area = create_directory(identifier+"_mass_"+mass_point, output_dir)
+out_area = create_directory(identifier+"_mass_"+mass_point+"_"+systematic, output_dir)
 print 'Creating submission scripts in directory \n '+str(out_area)
 
 executable = '/user_mnt/user/mccartin/CMSSW/CMSSW_5_3_18/bin/slc6_amd64_gcc472/runPseudoExperiments'
@@ -121,10 +124,12 @@ rootinput_bkgd = []
 for line in open(configname,'rb+'):
 	if 'SIGNAL_FILE' in line:
 		rootinput_sig = line.split(" ")[1]
-	if 'BACKGROUND_FILE' in line:
+	if 'BACKGROUND_FILE' in line and '#' not in line[0]:
 		rootinput_bkgd.append(line.split(" ")[1])
 
+print configname
 os.system("mkdir "+out_area+"/data")
+os.system("cp "+configname+" "+out_area)
 os.system("cp "+cmssw_dir+"/data/muon_calibration.root "+out_area+"/data")
 os.system("cp "+cmssw_dir+"/data/crossSection.root "+out_area+"/data")
 os.system("cp "+rootinput_sig+" "+out_area)

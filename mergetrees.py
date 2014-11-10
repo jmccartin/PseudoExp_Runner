@@ -2,7 +2,7 @@
 
 import sys,os
 import numpy as np
-import glob
+import glob,re
 
 import ROOT
 
@@ -12,8 +12,9 @@ ROOT.gStyle.SetOptStat(0)
 
 pentuple_dir = sys.argv[1]
 
+print 'Merging files in '+pentuple_dir+'...'
 
-rfile_list = sorted(glob.glob(pentuple_dir+'Mass*NOMINAL_*.root'))
+rfile_list = sorted(glob.glob(pentuple_dir+'MassJES*_*.root'))
 script_list = sorted(glob.glob(pentuple_dir+'*.sh'))
 out_list = sorted(glob.glob(pentuple_dir+'*.sh.o*'))
 err_list = sorted(glob.glob(pentuple_dir+'*.sh.e*'))
@@ -38,7 +39,7 @@ def resubmit_job(job):
 # Check output files for seg faults and walltime issues
 for file in err_list:
 	for line in open(file, 'rb+'):
-		if ('segmentation' in line) or ('walltime' in line):
+		if ('segmentation' in line) or ('walltime' in line) or ('is not a directory' in line):
 			print 'Warning!  Errors found in job: '+str(file)
 			bad_files[file.split('.e')[0]] = 1
 
@@ -88,7 +89,8 @@ if harvest:
 
 	mergedInfoTree = psexpInfoTree.CloneTree(0)
 
-	outfile = rfile_list[0].split('NOMINAL_')[0]+'NOMINAL.root'
+	suffix = re.findall('_[0-9]{1,3}.root',rfile_list[0])
+	outfile = rfile_list[0].split(suffix[0])[0]+'.root'
 
 	mergedFile = ROOT.TFile(outfile,'recreate')
 

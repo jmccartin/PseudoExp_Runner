@@ -2,10 +2,14 @@
 
 cmssw_dir = /user_mnt/user/mccartin/CMSSW/CMSSW_5_3_18/src/Mass/Validation
 output_dir = /localgrid/mccartin/apps/pse_runner/output/
-identifier = hitfitsel_signal_singletop_mix
+identifier = hitfitsel_systematics_ttbar_sig_ttbar_bkgd
 mass_point = 172
 
 [job]
-walltime = 2:59:59
+walltime = 1:59:59
 n_pseudoexps = 1000
-splitting = 50
+splitting = 20
+
+[systematics]
+# of type <systematic>_<variation>
+systematic_variation = NOMINAL

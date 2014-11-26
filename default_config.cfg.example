@@ -1,8 +1,10 @@
 [default]
 
 cmssw_dir = /user_mnt/user/mccartin/CMSSW/CMSSW_5_3_18/src/Mass/Validation
+localgrid_cmssw_dir = /localgrid/mccartin/CMSSW_5_3_11_patch5/
 output_dir = /localgrid/mccartin/apps/pse_runner/output/
 identifier = hitfitsel_systematics_ttbar_sig_ttbar_bkgd
+#identifier = hitfit_validation_bkgd_60pc
 mass_point = 172
 
 [job]

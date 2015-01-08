@@ -25,7 +25,7 @@ for file in sorted(rfile_list_raw):
 script_list = sorted(glob.glob(pentuple_dir+'*.sh'))
 out_list = sorted(glob.glob(pentuple_dir+'*.sh.o*'))
 err_list = sorted(glob.glob(pentuple_dir+'*.sh.e*'))
-config_list = sorted(glob.glob(pentuple_dir+'samplesFile*.txt'))
+config_list = sorted(glob.glob(pentuple_dir+'samplesFile_*.txt'))
 
 rlist_1 = ROOT.TList()
 

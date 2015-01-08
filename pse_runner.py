@@ -122,6 +122,7 @@ def create_submission_script(output_dir, file_iter):
 
 configname = cmssw_dir+'/data/samplesFile_'+mass_point+'.txt'
 #configname = cmssw_dir+'/data/samplesFile_validation.txt'
+#configname = cmssw_dir+'/data/samplesFile_transfervalidation.txt'
 
 rootinput_bkgd = []
 

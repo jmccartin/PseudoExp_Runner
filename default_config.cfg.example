@@ -4,11 +4,12 @@ cmssw_dir = /user_mnt/user/mccartin/CMSSW/CMSSW_5_3_18/src/Mass/Validation
 localgrid_cmssw_dir = /localgrid/mccartin/CMSSW_5_3_11_patch5/
 output_dir = /localgrid/mccartin/apps/pse_runner/output/
 identifier = hitfitsel_systematics_ttbar_sig_ttbar_bkgd
-#identifier = hitfit_validation_bkgd_60pc
+#identifier = validation_hitfit_0pc
 mass_point = 172
 
 [job]
 walltime = 1:59:59
+#walltime = 0:29:59
 n_pseudoexps = 1000
 splitting = 20
 
